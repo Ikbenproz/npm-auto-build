@@ -218,7 +218,7 @@ You can test this action locally using Docker:
 ./test.sh "build:prod" "build" "./my-project"
 ```
 
-For more testing options, see [TESTING.md](TESTING.md).
+For more testing options, see [docs/testing.md](docs/testing.md).
 
 ## �🤝 Contributing
 
