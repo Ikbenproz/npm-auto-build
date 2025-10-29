@@ -1,5 +1,5 @@
 name: "NPM Auto Build"
-description: "🚀 Automatically build and commit your npm project's build files to your repository. Perfect for keeping source code clean while maintaining compiled assets for deployment."
+description: "🚀 Automatically build and commit your npm project's build files to your repository"
 
 author: "Miguel Colmenares <me@miguelcolmenares.com>"
 
