@@ -1,6 +1,8 @@
 # NPM Auto Build GitHub Action
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/miguelcolmenares/npm-auto-build)](https://github.com/miguelcolmenares/npm-auto-build/releases)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-NPM%20Auto%20Build-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=github)](https://github.com/marketplace/actions/npm-auto-build)
+[![CI](https://github.com/miguelcolmenares/npm-auto-build/workflows/CI/badge.svg)](https://github.com/miguelcolmenares/npm-auto-build/actions)
 [![GitHub](https://img.shields.io/github/license/miguelcolmenares/npm-auto-build)](LICENSE)
 
 🚀 **Automatically build and commit your npm project's build files to your repository**
