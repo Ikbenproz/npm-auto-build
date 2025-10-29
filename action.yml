@@ -1,5 +1,5 @@
 name: "NPM Auto Build"
-description: "Run build command from your package.json"
+description: "🚀 Automatically build and commit your npm project's build files to your repository. Perfect for keeping source code clean while maintaining compiled assets for deployment."
 
 author: "Miguel Colmenares <me@miguelcolmenares.com>"
 
@@ -41,5 +41,5 @@ runs:
   image: "Dockerfile"
 
 branding:
-  icon: "box"
-  color: "green"
+icon: "package"
+color: "blue"
