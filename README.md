@@ -435,7 +435,42 @@ You can test this action locally using Docker:
 
 For more testing options, see [docs/testing.md](docs/testing.md).
 
-## �🤝 Contributing
+## 🔄 Automatic Updates with Dependabot
+
+To keep your GitHub Actions automatically updated, add this to your repository:
+
+```yml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+```
+
+**What Dependabot will detect:**
+- ✅ **This action**: `miguelcolmenares/npm-auto-build@v1.0.x` → `@v1.1.0`
+- ✅ **Checkout updates**: `actions/checkout@v4` → `@v5`
+- ✅ **Other action dependencies**
+
+### Migration from v1.0.x to v1.1.0
+
+#### Using Dependabot (Recommended)
+1. Add GitHub Actions to `dependabot.yml` (see above)
+2. Accept the automated PR when it appears
+3. Verify your workflows still pass
+
+#### Manual Update
+1. Update action version: `@v1.0.x` → `@v1.1.0`
+2. Update checkout: `@v4` → `@v5` (recommended)
+3. Test your workflows
+
+#### Self-hosted Runners
+If using checkout@v5, ensure your Actions Runner is v2.327.1 or higher.
+
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 

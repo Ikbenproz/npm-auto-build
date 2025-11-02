@@ -60,6 +60,40 @@ For existing users updating from v1.0.x to v1.1.0:
      contents: write
    ```
 
+### Dependabot and Automated Updates
+
+#### For Dependabot Users
+Dependabot will automatically detect and suggest updates for both:
+- **This action**: `miguelcolmenares/npm-auto-build@v1.0.x` → `@v1.1.0`
+- **Checkout action**: `actions/checkout@v4` → `@v5` (if configured)
+
+To ensure Dependabot monitors GitHub Actions:
+```yml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
+
+#### Action Deprecation Strategy
+When we release v2.0.0, we will:
+1. **Add deprecation notice** to v1.x README
+2. **Create GitHub Advisory** for security/compatibility updates
+3. **Add workflow warnings** when checkout@v4 is detected
+4. **Provide automated PR template** for easy migration
+
+#### Compatibility Detection
+Future versions will detect outdated checkout versions and warn users:
+```yml
+# Future feature - automatic compatibility checking
+- name: Build and Deploy
+  uses: miguelcolmenares/npm-auto-build@v2
+  # Will warn: "checkout@v4 detected, recommend upgrading to @v5"
+```
+
 ## [1.0.0] - 2024-11-01
 
 ### Added
