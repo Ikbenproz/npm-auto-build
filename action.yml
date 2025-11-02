@@ -35,6 +35,10 @@ inputs:
     description: "Node.js version to use for building"
     required: false
     default: "18"
+build-only:
+  description: "Only build without committing changes (useful for testing)"
+  required: false
+  default: "false"
 
 runs:
   using: "docker"

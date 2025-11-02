@@ -1,0 +1,44 @@
+# Example for monorepo with multiple packages
+name: Monorepo Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    strategy:
+      matrix:
+        package:
+          - name: 'web-app'
+            directory: './apps/web'
+            build-command: 'build'
+            build-dir: 'dist'
+          - name: 'admin-panel'
+            directory: './apps/admin'
+            build-command: 'build:prod'
+            build-dir: 'build'
+          - name: 'shared-ui'
+            directory: './packages/ui'
+            build-command: 'build:lib'
+            build-dir: 'lib'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build ${{ matrix.package.name }}
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          directory: ${{ matrix.package.directory }}
+          command: ${{ matrix.package.build-command }}
+          build-dir: ${{ matrix.package.build-dir }}
+          commit-message: 'chore(${{ matrix.package.name }}): update build files'
+          github-token: ${{ secrets.GITHUB_TOKEN }}

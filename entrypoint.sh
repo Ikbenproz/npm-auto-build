@@ -31,6 +31,7 @@ GITHUB_TOKEN="$INPUT_GITHUB_TOKEN"
 GIT_USER_NAME="$INPUT_GIT_USER_NAME"
 GIT_USER_EMAIL="$INPUT_GIT_USER_EMAIL"
 NODE_VERSION="$INPUT_NODE_VERSION"
+BUILD_ONLY="$INPUT_BUILD_ONLY"
 
 log_info "Starting NPM Auto Build Action"
 log_info "Project directory: $PROJECT_DIR"
@@ -94,6 +95,14 @@ if [ ! -d "$BUILD_DIR" ]; then
         log_error "No build directory found. Please specify the correct build-dir parameter."
         exit 1
     fi
+fi
+
+# Check if build-only mode is enabled
+if [ "$BUILD_ONLY" = "true" ]; then
+    log_info "✅ Build completed successfully in build-only mode!"
+    log_info "Build directory '$BUILD_DIR' has been created but not committed."
+    log_info "Use this mode for testing builds without modifying the repository."
+    exit 0
 fi
 
 # Configure Git

@@ -1,23 +1,34 @@
-# Example Usage of NPM Auto Build Action
+# NPM Auto Build - Workflow Examples
 
-This folder contains example workflows for different use cases.
+This directory contains real-world examples of how to use the NPM Auto Build GitHub Action in different scenarios.
 
-## React App Example
+## 📁 Available Examples
 
-```yml
-name: Build and Deploy React App
-on:
-  push:
-    branches: [ main ]
+### [`complete-workflow.yml`](./complete-workflow.yml)
+**Complete CI/CD Setup** - Shows how to use both build-only mode for PR testing and build+commit for main branch deployments.
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      
-    steps:
-      - name: Checkout
+- ✅ **PR Testing**: Uses `build-only: true` to validate builds without committing
+- ✅ **Main Branch**: Builds and commits to repository when changes are merged
+- ✅ **No Permissions**: PR builds don't need special permissions
+- ✅ **Smart Conditions**: Uses GitHub context to determine which mode to use
+
+### [`monorepo.yml`](./monorepo.yml)
+**Monorepo Multi-Package Build** - Perfect for workspaces with multiple npm packages that need individual builds.
+
+- 🏗️ **Matrix Strategy**: Builds multiple packages in parallel
+- 📁 **Custom Directories**: Each package has its own directory and build settings
+- 🎯 **Targeted Commits**: Commit messages indicate which package was updated
+- ⚡ **Efficient**: Only builds what's needed
+
+### [`protected-branches.yml`](./protected-branches.yml)
+**Protected Branches Setup** - Shows how to work with branch protection rules and create releases.
+
+- 🔒 **Personal Access Token**: Uses PAT for protected branches
+- 🤖 **Custom Bot Identity**: Sets up branded bot user for commits
+- 🚀 **Auto Releases**: Creates releases after successful builds
+- 🎯 **Production Ready**: Designed for production environments
+
+## 🚀 How to Use These Examples
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

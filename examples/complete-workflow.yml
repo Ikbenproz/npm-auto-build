@@ -1,0 +1,54 @@
+# Complete example showing build + commit and build-only modes
+name: Complete Build Workflow
+
+on:
+  # Build and commit on main branch
+  push:
+    branches: [ main ]
+  
+  # Only test build on PRs
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Test build on Pull Requests (no commit)
+  test-build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    # No special permissions needed for testing
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Test Build (No Commit)
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          build-only: true  # Only test the build
+          command: 'build:prod'
+          build-dir: 'dist'
+
+  # Build and commit on main branch
+  build-and-commit:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    # Required permissions for committing
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Commit
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          command: 'build:prod'
+          build-dir: 'dist'
+          commit-message: '🚀 Update production build'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          git-user-name: 'Build Bot'
+          git-user-email: 'build-bot@company.com'

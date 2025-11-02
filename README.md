@@ -2,12 +2,13 @@
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/miguelcolmenares/npm-auto-build)](https://github.com/miguelcolmenares/npm-auto-build/releases)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-NPM%20Auto%20Build-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=github)](https://github.com/marketplace/actions/npm-auto-build)
-[![CI](https://github.com/miguelcolmenares/npm-auto-build/workflows/CI/badge.svg)](https://github.com/miguelcolmenares/npm-auto-build/actions)
 [![GitHub](https://img.shields.io/github/license/miguelcolmenares/npm-auto-build)](LICENSE)
 
 🚀 **Automatically build and commit your npm project's build files to your repository**
 
 This GitHub Action runs your npm build script and automatically commits the generated build files to your repository. Perfect for keeping your source code clean while maintaining compiled assets for deployment or distribution.
+
+> 📋 **GitHub Marketplace Ready**: This action fully complies with [GitHub Marketplace requirements](https://docs.github.com/en/actions/creating-actions/publishing-actions-in-github-marketplace#prerequisites) and is ready for publication.
 
 ## ✨ Features
 
@@ -20,32 +21,58 @@ This GitHub Action runs your npm build script and automatically commits the gene
 
 ## 🚀 Quick Start
 
-### Basic Usage
+### Basic Usage (Build + Commit)
 
 ```yml
 name: Auto Build
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # 🔑 Required permissions for committing build files
+    permissions:
+      contents: write  # Allows the action to commit and push changes
+    
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Auto Build
+      - name: Auto Build & Commit
         uses: miguelcolmenares/npm-auto-build@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### Advanced Usage
+### Build-Only Usage (Testing/CI)
+
+```yml
+name: Test Build
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    
+    # 🧪 No special permissions needed for build-only mode
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Test Build
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          build-only: true  # Only build, don't commit
+```
+
+### Advanced Usage with Custom Settings
 
 ```yml
 name: Advanced Auto Build
@@ -56,13 +83,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Auto Build
+      - name: Advanced Auto Build
         uses: miguelcolmenares/npm-auto-build@v1
         with:
           command: 'build:prod'
@@ -75,6 +106,33 @@ jobs:
           node-version: '18'
 ```
 
+### Protected Branches Setup
+
+```yml
+name: Protected Branch Build
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout with PAT
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT }}  # Personal Access Token for protected branches
+
+      - name: Auto Build
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          github-token: ${{ secrets.PAT }}  # Same PAT for pushing
+```
+
 ## 📖 Inputs
 
 | Input | Description | Required | Default |
@@ -83,10 +141,41 @@ jobs:
 | `directory` | Directory containing package.json | No | `.` |
 | `build-dir` | Directory where build files are generated | No | `dist` |
 | `commit-message` | Commit message for build changes | No | `chore: update build files` |
-| `github-token` | GitHub token for authentication | **Yes** | - |
+| `github-token` | GitHub token for authentication | **Yes*** | - |
 | `git-user-name` | Git user name for commits | No | `github-actions[bot]` |
 | `git-user-email` | Git user email for commits | No | `github-actions[bot]@users.noreply.github.com` |
 | `node-version` | Node.js version to use | No | `18` |
+| `build-only` | Only build without committing changes | No | `false` |
+
+> **\*** Required only when committing changes. Not needed in `build-only` mode.
+
+## 🔐 Authentication & Permissions
+
+### Standard Workflow (Recommended)
+
+- Use `${{ secrets.GITHUB_TOKEN }}` - GitHub's built-in token
+- Add `permissions: contents: write` to your job
+- Works for most use cases on public repositories
+- **Checkout@v5**: Uses Node.js 24 runtime (requires Actions Runner v2.327.1+)
+
+```yml
+permissions:
+  contents: write  # Required for committing changes
+  actions: read    # Required for checkout action (default)
+```
+
+### Protected Branches
+
+- Create a Personal Access Token (PAT) with `repo` scope
+- Store as repository secret (e.g., `secrets.PAT`)
+- Use in both checkout and action steps
+
+### Build-Only Mode
+
+- No token or permissions required
+- Perfect for testing builds in CI/PR workflows  
+- Set `build-only: true` to skip Git operations
+- Only requires `contents: read` (default checkout permission)
 
 ## 🎯 Use Cases
 
@@ -102,62 +191,186 @@ Generate and deploy documentation sites (like with VuePress, GitBook, etc.) auto
 ### 4. **Static Site Generation**
 Build and commit static sites generated by tools like Gatsby, Next.js, Nuxt.js, etc.
 
-## 🔧 Configuration Examples
+## 🔧 Real-World Examples
 
-### React Application
+### 1. Testing Build in PR (Build-Only Mode)
+
 ```yml
-- name: Build React App
-  uses: miguelcolmenares/npm-auto-build@v1
+name: PR Build Test
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Test Build
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          build-only: true  # Only test, don't commit
+          command: 'build:prod'
+```
+
+### 2. Deploy to GitHub Pages
+
+```yml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+    
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build for GitHub Pages
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          command: 'build'
+          build-dir: 'dist'
+          commit-message: '🚀 Deploy to GitHub Pages'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### 3. Library Distribution (NPM Package)
+
+```yml
+name: Build Library
+on:
+  push:
+    tags: [ 'v*' ]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build TypeScript Library
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          command: 'build:lib'
+          build-dir: 'lib'
+          commit-message: 'chore: update compiled library'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+### 4. Monorepo Multi-Package Build
+
+```yml
+name: Monorepo Build
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    strategy:
+      matrix:
+        package:
+          - { name: 'frontend', dir: './packages/web', build-dir: 'dist' }
+          - { name: 'admin', dir: './packages/admin', build-dir: 'build' }
+          - { name: 'mobile-web', dir: './packages/mobile', build-dir: 'dist' }
+    
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build ${{ matrix.package.name }}
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          directory: ${{ matrix.package.dir }}
+          build-dir: ${{ matrix.package.build-dir }}
+          commit-message: 'chore: update ${{ matrix.package.name }} build'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### 5. Protected Branch with Custom Bot
+
+```yml
+name: Production Build
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  protected-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.BOT_PAT }}  # Custom bot token
+      
+      - name: Production Build
+        uses: miguelcolmenares/npm-auto-build@v1
+        with:
+          command: 'build:production'
+          build-dir: 'dist'
+          commit-message: '🏗️ Production build update'
+          github-token: ${{ secrets.BOT_PAT }}
+          git-user-name: 'Production Bot'
+          git-user-email: 'bot@mycompany.com'
+```
+
+## 📁 More Examples
+
+Check out the [`examples/`](./examples/) directory for complete workflow files:
+
+- **[`complete-workflow.yml`](./examples/complete-workflow.yml)** - Build-only for PRs, build+commit for main
+- **[`monorepo.yml`](./examples/monorepo.yml)** - Multi-package monorepo setup  
+- **[`protected-branches.yml`](./examples/protected-branches.yml)** - Working with protected branches
+
+## ⚡ GitHub Actions Compatibility
+
+### Checkout Action v5
+
+This action is fully compatible with **actions/checkout@v5**, the latest version which includes:
+
+- **Node.js 24 Runtime**: Improved performance and security
+- **Minimum Runner Version**: Requires Actions Runner v2.327.1 or higher
+- **Same API**: All existing configurations work unchanged
+- **Enhanced Security**: Updated dependencies and security improvements
+
+```yml
+# ✅ Recommended - Latest version
+- uses: actions/checkout@v5
   with:
-    command: 'build'
-    build-dir: 'build'
-    commit-message: 'chore: update React build'
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+    token: ${{ secrets.GITHUB_TOKEN }}
+
+# ⚠️ Still supported but older
+- uses: actions/checkout@v4
 ```
 
-### Vue.js Application
-```yml
-- name: Build Vue App
-  uses: miguelcolmenares/npm-auto-build@v1
-  with:
-    command: 'build'
-    build-dir: 'dist'
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### TypeScript Library
-```yml
-- name: Build TypeScript Library
-  uses: miguelcolmenares/npm-auto-build@v1
-  with:
-    command: 'build'
-    build-dir: 'lib'
-    commit-message: 'chore: update compiled TypeScript'
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### Monorepo Setup
-```yml
-- name: Build Frontend Package
-  uses: miguelcolmenares/npm-auto-build@v1
-  with:
-    directory: './packages/frontend'
-    command: 'build:prod'
-    build-dir: 'dist'
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-## 🔒 Permissions
-
-Make sure your workflow has the necessary permissions:
-
-```yml
-permissions:
-  contents: write  # Required to commit changes
-  actions: read    # Required to read workflow info
-```
-
-Or use a Personal Access Token with `contents:write` permission.
+> **Note**: If you encounter issues with checkout@v5, ensure your GitHub-hosted runners are up to date. Self-hosted runners need to be updated to v2.327.1 or higher.
 
 ## 🛠️ How It Works
 
