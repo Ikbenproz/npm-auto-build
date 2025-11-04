@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Install git and bash for committing changes
-RUN apk add --no-cache git bash
+# Install git, bash and github cli for committing changes and PR creation
+RUN apk add --no-cache git bash github-cli
 
 WORKDIR /app
 

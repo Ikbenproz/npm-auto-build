@@ -32,6 +32,7 @@ GIT_USER_NAME="${INPUT_GIT_USER_NAME:-"github-actions[bot]"}"
 GIT_USER_EMAIL="${INPUT_GIT_USER_EMAIL:-"github-actions[bot]@users.noreply.github.com"}"
 NODE_VERSION="${INPUT_NODE_VERSION:-"20"}"
 BUILD_ONLY="${INPUT_BUILD_ONLY:-"false"}"
+CREATE_PR="${INPUT_CREATE_PR:-"false"}"
 
 log_info "Starting NPM Auto Build Action"
 log_info "Project directory: $PROJECT_DIR"
@@ -124,6 +125,9 @@ git config user.email "$GIT_USER_EMAIL"
 # Set up authentication
 if [ -n "$GITHUB_TOKEN" ]; then
     git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+    
+    # Configure GitHub CLI
+    echo "$GITHUB_TOKEN" | gh auth login --with-token
 fi
 
 # Check if there are changes to commit
@@ -172,21 +176,90 @@ fi
 
 log_info "Found staged changes. Proceeding to commit..."
 
+# Check if we should create a PR instead of direct push
+if [ "$CREATE_PR" = "true" ]; then
+    # Get current branch name for PR base
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    log_info "Current branch: $CURRENT_BRANCH"
+    
+    # Create a unique branch name
+    BRANCH_NAME="auto-build-$(date +%Y%m%d-%H%M%S)"
+    log_info "Creating branch '$BRANCH_NAME' for pull request..."
+    
+    # Create and switch to new branch
+    git checkout -b "$BRANCH_NAME"
+fi
+
 # Commit changes
 log_info "Committing changes..."
 git commit -m "$COMMIT_MESSAGE"
 
 # Push changes
-log_info "Pushing changes to repository..."
-if git push; then
-    log_info "✅ Build completed and committed successfully!"
-    log_info "Build directory '$BUILD_DIR' has been updated and pushed to the repository."
-    
-    # Show final commit info
-    log_info "Latest commit:"
-    git log --oneline -1
+if [ "$CREATE_PR" = "true" ]; then
+    # Push the new branch
+    log_info "Pushing branch '$BRANCH_NAME' to repository..."
+    if git push -u origin "$BRANCH_NAME"; then
+        log_info "✅ Branch pushed successfully!"
+        log_info "📝 Creating pull request..."
+        
+        # Create PR using GitHub CLI or API
+        if command -v gh >/dev/null 2>&1; then
+            # Use GitHub CLI if available
+            gh pr create \
+                --title "🤖 Auto-build: Update build files" \
+                --body "Automated build files update from GitHub Actions.
+
+**Changes:**
+- Updated build directory: \`$BUILD_DIR\`
+- Build command: \`npm run $BUILD_COMMAND\`
+- Commit: $COMMIT_MESSAGE
+
+This PR was created automatically because the target branch is protected." \
+                --head "$BRANCH_NAME" \
+                --base "$CURRENT_BRANCH"
+            
+            log_info "✅ Pull request created successfully!"
+        else
+            log_warn "GitHub CLI not available. Manual PR creation required."
+            log_info "📝 Branch '$BRANCH_NAME' has been pushed."
+            log_info "Please create a pull request manually from this branch."
+        fi
+    else
+        log_error "Failed to push branch to repository!"
+        exit 1
+    fi
 else
-    log_error "Failed to push changes to repository!"
-    log_error "Check your GitHub token permissions and branch protection rules."
-    exit 1
+    # Direct push (original behavior)
+    log_info "Pushing changes to repository..."
+    if git push; then
+        log_info "✅ Build completed and committed successfully!"
+        log_info "Build directory '$BUILD_DIR' has been updated and pushed to the repository."
+        
+        # Show final commit info
+        log_info "Latest commit:"
+        git log --oneline -1
+    else
+        # Check if it's a protected branch issue
+        if git push 2>&1 | grep -q "protected branch\|Changes must be made through a pull request"; then
+            log_error "❌ Failed to push: Protected branch detected!"
+            log_error ""
+            log_error "The target branch has protection rules that prevent direct pushes."
+            log_error "This is common for main/master branches in production repositories."
+            log_error ""
+            log_error "🔧 Solutions:"
+            log_error "1. Use create-pr: true to automatically create pull requests"
+            log_error "2. Use a Personal Access Token (PAT) with bypass permissions"
+            log_error "3. Temporarily disable branch protection for automated builds"
+            log_error ""
+            log_error "� Quick fix - Add to your workflow:"
+            log_error "   uses: miguelcolmenares/npm-auto-build@v2"
+            log_error "   with:"
+            log_error "     github-token: \${{ secrets.GITHUB_TOKEN }}"
+            log_error "     create-pr: true  # Creates PR instead of direct push"
+        else
+            log_error "Failed to push changes to repository!"
+            log_error "Check your GitHub token permissions and network connectivity."
+        fi
+        exit 1
+    fi
 fi
