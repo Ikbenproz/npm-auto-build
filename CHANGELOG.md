@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-11-04
+
+### Fixed
+- **Critical .gitignore handling**: Build directories in .gitignore (like `dist/`) are now properly committed using `--force` flag
+- **Enhanced logging**: Added detailed git status logging to help diagnose commit issues
+- **Improved detection**: Better detection of ignored directories and files
+
+### Technical Details
+This fixes a critical issue where build files weren't committed if the build directory was in `.gitignore`. This is common practice where developers ignore `dist/` locally but want the action to commit official builds.
+
 ## [2.0.0] - 2025-11-04
 
 > **Note**: This is the first fully functional release. Previous v1.x versions contained a critical Docker configuration issue that prevented execution.
