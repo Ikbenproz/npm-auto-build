@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2025-11-10
+
+### Fixed
+- **Enhanced .gitignore detection for build directories**
+  - Build directories with trailing slash (e.g., `dist/`) are now properly detected
+  - Multiple pattern checks: `dist`, `dist/`, and `dist/*`
+  - Fallback grep validation for direct .gitignore file check
+  - Ensures proper use of `git add --force` for ignored directories
+
+### Technical Details
+The action now performs comprehensive checks to detect if a build directory is in `.gitignore`:
+1. `git check-ignore $BUILD_DIR` - Check exact directory name
+2. `git check-ignore $BUILD_DIR/` - Check with trailing slash
+3. `git check-ignore $BUILD_DIR/*` - Check files within directory
+4. Direct grep in `.gitignore` file - Fallback validation
+
+This fixes a critical issue where `dist/` (with trailing slash) in `.gitignore` wasn't being detected, causing the action to fail when attempting to commit build files.
+
+### Impact
+Users who have their build directories in `.gitignore` (common best practice) will now have their builds properly committed by the action without errors.
+
+
 ## [2.1.1] - 2025-11-04
 
 ### Fixed
